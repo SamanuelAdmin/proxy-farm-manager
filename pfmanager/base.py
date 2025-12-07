@@ -29,7 +29,7 @@ class Manager(Generic[T]):
 
     @property
     def devices(self) -> dict[str, T]:
-        return self.__devices
+        return self.__connected
 
 
     def iterDevices(self) -> Iterator[tuple[str, T]]:
