@@ -34,8 +34,15 @@ class Device(IDevice):
 
         return wrapper
 
+    def _controlMobileData(self, status: bool) -> None:
+        """ Turn on or off mobile data. """
+        print(f'[INFO] {self._serial} mobile data turned {"on" if status else "off"}.')
+        self.__adb.shell(f'svc data {"enable" if status else "disable"}')
+
+
     @ifOnline
     def checkConnection(self, host: str="1.1.1.1", timeout: int=1000) -> int:
+        self._controlMobileData(True)
         commandResult: str = self.__adb.shell(f'ping -c 1 -W {timeout} {host}')
 
         if any([ pattern.search(commandResult) for pattern in _checkConnectionPatters ]):

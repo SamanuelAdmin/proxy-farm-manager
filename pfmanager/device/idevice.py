@@ -4,7 +4,7 @@ import adbutils
 
 class IDevice(ABC):
     """
-        Interface for all devices.
+        Interface for all devices (external API).
         Device obj can control any connected physical device,
         like phone, usb-stick, etc.
     """
