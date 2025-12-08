@@ -57,3 +57,7 @@ class Manager(Generic[T]):
             if device.checkConnection() > 0:
                 yield serial, device
 
+
+    def activateInterfaces(self):
+        for serial, device in self.__connected.items():
+            device.activate()

@@ -5,5 +5,6 @@ from pfmanager import Device as PFDevice
 def main() -> None:
     pfManager = PFManager()
     print(pfManager.devices)
+    pfManager.activateInterfaces()
 
 if __name__ == '__main__': main()
