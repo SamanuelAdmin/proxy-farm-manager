@@ -2,14 +2,21 @@ import functools
 from curses import wrapper
 from typing import Callable
 import adbutils
+import re
 
 from .idevice import IDevice
+
+
+_checkConnectionPatters: list[re.Pattern] = [
+        re.compile(r"network is unreachable", re.IGNORECASE),
+    ]
 
 
 class Device(IDevice):
     def __init__(self, serial: str, adbDevice: adbutils.AdbDevice):
         self._serial = serial
         self.__adb: adbutils.AdbDevice = adbDevice
+
 
     def ifOnline(function: Callable) -> Callable:
         """
@@ -30,7 +37,9 @@ class Device(IDevice):
     @ifOnline
     def checkConnection(self, host: str="1.1.1.1", timeout: int=1000) -> int:
         commandResult: str = self.__adb.shell(f'ping -c 1 -W {timeout} {host}')
-        print(commandResult)
-        if 'Network is unreachable' in commandResult: return 0
+
+        if any([ pattern.search(commandResult) for pattern in _checkConnectionPatters ]):
+            print(f'[Warning] Device {self._serial} has no internet connection.')
+            return 0
 
         return 1
