@@ -1,5 +1,5 @@
 import functools
-from curses import wrapper
+import time
 from typing import Callable, Optional
 import adbutils
 import re
@@ -70,10 +70,11 @@ class Device(IDevice):
 
         return 1
 
-    def activate(self):
+    def activate(self, delay:int=1):
         """ Activate device as a proxy tunel. """
         self._controlMobileData(True)
         self._controlUsbTethering(True)
+        time.sleep(delay)
 
         self._ACTIVATED = True
         self._hotspotIp = self._getLocalIp()
