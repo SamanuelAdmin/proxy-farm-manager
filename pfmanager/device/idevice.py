@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from adbutils import adb
+import adbutils
 
 
 class IDevice(ABC):
@@ -10,7 +10,7 @@ class IDevice(ABC):
     """
 
     @abstractmethod
-    def __init__(self, serial: str, adbDevice: adb.AdbDevice) -> None:
+    def __init__(self, serial: str, adbDevice: adbutils.AdbDevice) -> None:
         """ To load device you need a serial addr of this device. """
 
     @abstractmethod

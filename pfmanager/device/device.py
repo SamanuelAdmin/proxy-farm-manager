@@ -1,10 +1,10 @@
-from adbutils import adb
+import adbutils
 
 from .idevice import IDevice
 
 
 class Device(IDevice):
-    def __init__(self, serial: str, adbDevice: adb.AdbDevice):
+    def __init__(self, serial: str, adbDevice: adbutils.AdbDevice):
         self._serial = serial
         self.__adb: adb.AdbDevice = adbDevice
 
