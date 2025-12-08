@@ -1,5 +1,5 @@
-from typing import TypeVar, Any, Generator, Iterator, Generic
-from adbutils import adb
+from typing import TypeVar, Iterator, Generic
+import adbutils
 
 from . import IDevice
 from .device import Device
@@ -18,6 +18,7 @@ class Manager(Generic[T]):
     def __init__(self, template:type[T]=Device, settings: ManagerSettings=ManagerSettings) -> None:
         self.__template: type[T] = template
         self.__settings: ManagerSettings = settings
+        self.__adbManager = adbutils.AdbClient(host=settings.ip, port=settings.port)
 
         self.__devices: dict[str, T] = {
             serial: device for serial, device in self.iterDevices()
@@ -39,8 +40,8 @@ class Manager(Generic[T]):
             :return Devices, one by one (generator), created by template class
         """
 
-        for serial in adb.device_list():
-            yield serial, self.__template(serial)
+        for serial in self.__adbManager.device_list():
+            yield serial, self.__template(serial, self.__adbManager.device(serial))
 
 
     def iterConnectedDevices(self) -> Iterator[tuple[str, T]]:
