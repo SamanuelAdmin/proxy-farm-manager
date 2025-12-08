@@ -1,6 +1,6 @@
 import functools
 from curses import wrapper
-from typing import Callable
+from typing import Callable, Optional
 import adbutils
 import re
 
@@ -15,6 +15,8 @@ _checkConnectionPatters: list[re.Pattern] = [
 class Device(IDevice):
     def __init__(self, serial: str, adbDevice: adbutils.AdbDevice):
         self._serial = serial
+        self._activates: bool = False
+        self._hotspotIp: Optional[str] = None # IP of local interface (from usb tethering)
         self.__adb: adbutils.AdbDevice = adbDevice
 
 
@@ -34,10 +36,27 @@ class Device(IDevice):
 
         return wrapper
 
+
+    @ifOnline
     def _controlMobileData(self, status: bool) -> None:
         """ Turn on or off mobile data. """
         print(f'[INFO] {self._serial} mobile data turned {"on" if status else "off"}.')
         self.__adb.shell(f'svc data {"enable" if status else "disable"}')
+
+    @ifOnline
+    def _controlUsbTethering(self, status: bool) -> None:
+        """ Turn on or off usb tethering. """
+        print(f'[INFO] {self._serial} usb tethering turned {"on" if status else "off"}.')
+        self.__adb.shell(f'svc usb setFunctions {"rndis,adb" if status else "mtp,adb"}')
+
+    @ifOnline
+    def _getLocalIp(self, interface: str="rndis0") -> str:
+        return self.__adb.shell("ip -o -4 addr show " + interface + " | awk -F '[ /]+' '/inet/ {print $4}'")
+
+    @ifOnline
+    def _restart(self):
+        """ Restart the physical device. """
+        self.__adb.reboot()
 
 
     @ifOnline
@@ -50,3 +69,14 @@ class Device(IDevice):
             return 0
 
         return 1
+
+    def activate(self):
+        """ Activate device as a proxy tunel. """
+        self._controlMobileData(True)
+        self._controlUsbTethering(True)
+
+        self._ACTIVATED = True
+        self._hotspotIp = self._getLocalIp()
+
+        print(f'[INFO] {self._serial} set up to interface mode. Device IP: {self._hotspotIp}.')
+

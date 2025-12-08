@@ -24,3 +24,7 @@ class IDevice(ABC):
             :return: Time of response in ms.
         """
 
+    @abstractmethod
+    def activate(self):
+        """ Activate device as a proxy tunel. """
+
