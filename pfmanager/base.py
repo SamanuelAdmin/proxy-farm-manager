@@ -40,8 +40,8 @@ class Manager(Generic[T]):
             :return Devices, one by one (generator), created by template class
         """
 
-        for serial in self.__adbManager.device_list():
-            yield serial, self.__template(serial, self.__adbManager.device(serial))
+        for dev in self.__adbManager.device_list():
+            yield dev.serial, self.__template(dev.serial, dev)
 
 
     def iterConnectedDevices(self) -> Iterator[tuple[str, T]]:
