@@ -28,8 +28,8 @@ class Device(IDevice):
         return wrapper
 
     @ifOnline
-    def checkConnection(self, timeout: int=1000) -> int:
-        commandResult: str = self.__adb.shell(f'ping -c 1 -W {timeout} 1.1.1.1')
+    def checkConnection(self, host: str="1.1.1.1", timeout: int=1000) -> int:
+        commandResult: str = self.__adb.shell(f'ping -c 1 -W {timeout} {host}')
         print(commandResult)
         if 'Network is unreachable' in commandResult: return 0
 

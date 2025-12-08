@@ -14,7 +14,7 @@ class IDevice(ABC):
         """ To load device you need a serial addr of this device. """
 
     @abstractmethod
-    def checkConnection(self, host:str, timeout: int=1000) -> int:
+    def checkConnection(self, host:str="", timeout: int=1000) -> int:
         """
             To check if device is connected to internet.
             Returns time of response in ms if it is possible.
