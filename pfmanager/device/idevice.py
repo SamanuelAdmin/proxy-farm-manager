@@ -14,11 +14,13 @@ class IDevice(ABC):
         """ To load device you need a serial addr of this device. """
 
     @abstractmethod
-    def checkConnection(self, timeout: int=1000) -> int:
+    def checkConnection(self, host:str, timeout: int=1000) -> int:
         """
             To check if device is connected to internet.
             Returns time of response in ms if it is possible.
             If not - returns 1 if connected, 0 - if not.
+            Timeout - timeout of the ping command.
+            Host - host for checking the connection. Use Google DNS servers etc.
             :return: Time of response in ms.
         """
 
