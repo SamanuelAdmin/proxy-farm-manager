@@ -1,3 +1,5 @@
+import functools
+from curses import wrapper
 from typing import Callable
 import adbutils
 
@@ -10,9 +12,16 @@ class Device(IDevice):
         self.__adb: adbutils.AdbDevice = adbDevice
 
     def ifOnline(function: Callable) -> Callable:
+        """
+            Checks if device is online or not.
+            USE IT WITH EVERY DEVICE OPERATION.
+        """
+
+        functools.wraps(function)
         def wrapper(self, *args, **kwargs):
-            if not self.__adb.isOnline():
-                raise Exception("Device is not online")
+            #!TODO Finish this decorator
+            # if not self.__adb.isOnline():
+            #     raise Exception("Device is not online")
 
             return function(self, *args, **kwargs)
 
