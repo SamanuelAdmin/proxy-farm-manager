@@ -19,6 +19,9 @@ class Device(IDevice):
         self._hotspotIp: Optional[str] = None # IP of local interface (from usb tethering)
         self.__adb: adbutils.AdbDevice = adbDevice
 
+    def __recreate(self) -> None:
+        """ Update connection with device. """
+        self.__adb = adbutils.device(serial=self._serial)
 
     def ifOnline(function: Callable) -> Callable:
         """
@@ -58,6 +61,8 @@ class Device(IDevice):
         """ Restart the physical device. """
         self.__adb.reboot()
 
+    # def _changeNetConfigs(self, ip: Optional[str]=None, subnet: Optional[str]=None, ) -> None:
+
 
     @ifOnline
     def checkConnection(self, host: str="1.1.1.1", timeout: int=1000) -> int:
@@ -69,6 +74,7 @@ class Device(IDevice):
             return 0
 
         return 1
+
 
     def activate(self, delay:int=1):
         """ Activate device as a proxy tunel. """
