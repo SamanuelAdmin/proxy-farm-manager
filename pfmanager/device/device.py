@@ -61,8 +61,6 @@ class Device(IDevice):
         """ Restart the physical device. """
         self.__adb.reboot()
 
-    # def _changeNetConfigs(self, ip: Optional[str]=None, subnet: Optional[str]=None, ) -> None:
-
 
     @ifOnline
     def checkConnection(self, host: str="1.1.1.1", timeout: int=1000) -> int:
