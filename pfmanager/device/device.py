@@ -13,6 +13,11 @@ _checkConnectionPatters: list[re.Pattern] = [
 
 
 class Device(IDevice):
+    """
+        Physical device API.
+        To control modem, phone etc.
+    """
+
     def __init__(self, serial: str, adbDevice: adbutils.AdbDevice):
         self._serial = serial
         self._activates: bool = False
@@ -78,7 +83,10 @@ class Device(IDevice):
         """ Activate device as a proxy tunel. """
         self._controlMobileData(True)
         self._controlUsbTethering(True)
+
+        # adb lost connection, so need to reconnect
         time.sleep(delay)
+        self.__recreate()
 
         self._ACTIVATED = True
         self._hotspotIp = self._getLocalIp()
