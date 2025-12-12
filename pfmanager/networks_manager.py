@@ -1,12 +1,13 @@
 import dbus
 from dataclasses import dataclass
+import ipaddress
 
 
 
 @dataclass
 class NetworkInterface:
     name: str
-    ip_address: str
+    interface: ipaddress.IPv4Interface
 
 
 class NetworksManager:
@@ -42,13 +43,16 @@ class NetworksManager:
         )
 
         ip4Config = self.__sysbus.get_object(self.__name, str(ip4ConfigPath))
-        ip4Addr: dbus.String = ip4Config.Get(
+        ip4Data: dbus.String = ip4Config.Get(
             'org.freedesktop.NetworkManager.IP4Config', 'AddressData', dbus_interface=dbus.PROPERTIES_IFACE
         )[0].get('address')
 
+        ip4Addr: dbus.String = ip4Data.get('address')
+        prefix: dbus.Int32 = ip4Data.get('prefix')
+
         return NetworkInterface(
             name=str(interfaceName),
-            ip_address=str(ip4Addr),
+            interface=ipaddress.ip_interface(f"{ip4Addr}/{prefix}")
         )
 
 

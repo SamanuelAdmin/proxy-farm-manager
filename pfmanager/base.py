@@ -1,5 +1,6 @@
 from typing import TypeVar, Iterator, Generic
 import adbutils
+import os
 
 from . import IDevice
 from .device import Device
@@ -7,6 +8,11 @@ from .settings import ManagerSettings
 
 
 T = TypeVar("T", bound=IDevice)
+
+
+def checkForRootPermissions():
+    """ True if user has root permissions. """
+    return os.geteuid() == 0
 
 
 class Manager(Generic[T]):
