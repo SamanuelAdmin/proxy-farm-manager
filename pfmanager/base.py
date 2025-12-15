@@ -4,6 +4,7 @@ import os
 
 from . import IDevice
 from .device import Device
+from .proxy_server import ProxyServerConfigurator, ProxyServerController
 from .settings import ManagerSettings
 
 
@@ -24,21 +25,32 @@ class Manager(Generic[T]):
     def __init__(self, template:type[T]=Device, settings: ManagerSettings=ManagerSettings) -> None:
         self.__template: type[T] = template
         self.__settings: ManagerSettings = settings
-        self.__adbManager = adbutils.AdbClient(host=settings.ip, port=settings.port)
+
+        self.__ProxyServerConfigurator: ProxyServerConfigurator = ProxyServerConfigurator(
+            self.__settings.proxySettings
+        )
+        self.__ProxyServerController: ProxyServerController = ProxyServerController(
+            self.__ProxyServerConfigurator
+        )
+        self.__adbManager = adbutils.AdbClient(
+            host=settings.adbSettings.ip, port=settings.adbSettings.port
+        )
 
         self.__devices: dict[str, T] = {
-            serial: device for serial, device in self.iterDevices()
+            serial: device for serial, device in self.iterDevices
         }
         self.__connected: dict[str, T] = {
-            serial: device for serial, device in self.iterConnectedDevices()
+            serial: device for serial, device in self.iterConnectedDevices
         }
 
 
     @property
-    def devices(self) -> dict[str, T]:
-        return self.__connected
+    def processedDevices(self) -> dict[str, T]:
+        """ All devices, which have been processed. """
+        return self.__devices
 
 
+    @property
     def iterDevices(self) -> Iterator[tuple[str, T]]:
         """
             Creating list of all devices using IDevice class,
@@ -50,6 +62,7 @@ class Manager(Generic[T]):
             yield dev.serial, self.__template(dev.serial, dev)
 
 
+    @property
     def iterConnectedDevices(self) -> Iterator[tuple[str, T]]:
         """
         Check for connected to internet devices.
@@ -64,6 +77,5 @@ class Manager(Generic[T]):
                 yield serial, device
 
 
-    def activateInterfaces(self):
-        for serial, device in self.__connected.items():
-            device.activate()
+    def startProxyServer(self):
+        pass

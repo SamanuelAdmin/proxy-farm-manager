@@ -1,7 +1,7 @@
 import dbus
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import ipaddress
-
+from pyroute2 import NDB
 
 
 @dataclass
@@ -10,9 +10,18 @@ class NetworkInterface:
     interface: ipaddress.IPv4Interface
 
 
+@dataclass
+class BridgeInterface:
+    name: str
+    configs: ipaddress.IPv4Interface
+    ifacesNames: field(default_factory=list)
+
+
+
 class NetworksManager:
     """
-        DBUS API to the Linux networks manager.
+        API to the Linux networks manager.
+
         Singleton for only 1 connection in one period of time.
     """
 
@@ -30,6 +39,7 @@ class NetworksManager:
         self.__sysbus = dbus.SystemBus()
         self.__networkDbus = self.__sysbus.get_object(self.__name, '/org/freedesktop/NetworkManager')
         self.__networkDbusInterface = dbus.Interface(self.__networkDbus, self.__name)
+
 
     def getInterfaceData(self, deviceObject) -> NetworkInterface:
         interfaceName: dbus.String = deviceObject.Get(
@@ -64,6 +74,45 @@ class NetworksManager:
             interfaces.append( self.getInterfaceData(deviceObject) )
 
         return interfaces
+
+
+    def createBridge(
+            self, bridgeIface: ipaddress.IPv4Interface,
+            childrenIfaces: list[NetworkInterface],
+            name="proxy-inner") -> BridgeInterface:
+        """
+            Create and start a bridge to connect all inner physic interfaces to the logic one.
+            Takes all children interfaces from the childrenIfaces, configs for the network from .
+        """
+
+        ndb = NDB(log='debug')
+
+        # creating new bridge by "configs"
+        with ndb.interfaces.create(ifname=name, kind='bridge') as bridge:
+
+            # all children interfaces down
+            for child in childrenIfaces:
+                childInterface = ndb.interfaces[child.name]
+                childInterface.set(state="down")
+                childInterface.commit()
+
+                # adding to the created bridge
+                bridge.add_port(child.name)
+                # first ip addr in the network diapason
+                bridge.add_ip(next(child.interface.network.hosts()))
+
+            # turn bridge up
+            bridge.set(
+                br_stp_state=1,
+                br_group_fwd_mask=0x4000,
+                state='up',
+            )
+
+
+        return BridgeInterface(
+            name=name, configs=bridgeIface,
+            ifacesNames=[chName for chName in childrenIfaces]
+        )
 
 
 

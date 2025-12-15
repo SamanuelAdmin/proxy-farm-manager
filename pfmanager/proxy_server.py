@@ -9,31 +9,27 @@ import dbus
 import shutil
 
 from .networks_manager import NetworkInterface
-from .settings import ManagerSettings
+from .settings import ProxySettings
 
 
 
-class ProxyConfigurator:
+class ProxyServerConfigurator:
     """
         Configurator for safe and flexible configs.
     """
 
-    def __init__(
-            self, settings: ManagerSettings,
-            path_to_squid: str="/etc/squid/squid.conf",
-            service_name="squid.service"
-    ):
+    def __init__(self, settings: ProxySettings):
         self.__settings = settings
-        self.__pathToConfigs: str = path_to_squid
+        self.__pathToConfigs: str = settings.path_to_squid
         self.__pathToBackup: str = self.__pathToConfigs + ".back"
-        self.__serviceName = service_name
+        self.__serviceName = settings.service_name
 
     @property
     def service_name(self): return self.__serviceName
 
 
     def backup(self) -> None:
-        if os.path.exists(self.__pathToConfigs)
+        if os.path.exists(self.__pathToConfigs):
             shutil.copyfile(self.__pathToConfigs, self.__pathToBackup)
 
     def restore(self) -> None:
@@ -88,8 +84,8 @@ class ProxyConfigurator:
         return proxyInterfaces
 
 
-class ProxyController:
-    def __init__(self, configurator: ProxyConfigurator):
+class ProxyServerController:
+    def __init__(self, configurator: ProxyServerConfigurator):
         self.__configurator = configurator
 
         # dbus usage
