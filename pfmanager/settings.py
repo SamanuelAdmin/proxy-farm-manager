@@ -33,5 +33,8 @@ class ManagerSettings:
         max_devices - max number of devices, 0 - unlimited
     """
 
+    inner_interfaces: list[str] = field(default_factory=list)
+    bridge_name: str = 'proxy-bridge'
+
     proxySettings: ProxySettings = ProxySettings()
     adbSettings: AdbSettings = AdbSettings()

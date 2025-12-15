@@ -2,8 +2,10 @@ from typing import TypeVar, Iterator, Generic
 import adbutils
 import os
 
-from . import IDevice
+from . import IDevice, settings
 from .device import Device
+from .networks_manager import NetworkInterface, NetworksManager, BridgeInterface
+from .proxy_interface import ProxyInterface
 from .proxy_server import ProxyServerConfigurator, ProxyServerController
 from .settings import ManagerSettings
 
@@ -26,11 +28,15 @@ class Manager(Generic[T]):
         self.__template: type[T] = template
         self.__settings: ManagerSettings = settings
 
-        self.__ProxyServerConfigurator: ProxyServerConfigurator = ProxyServerConfigurator(
+        self.__LOADED: bool = False
+
+        self.__networkManager: NetworksManager = NetworksManager()
+
+        self.__proxyServerConfigurator: ProxyServerConfigurator = ProxyServerConfigurator(
             self.__settings.proxySettings
         )
-        self.__ProxyServerController: ProxyServerController = ProxyServerController(
-            self.__ProxyServerConfigurator
+        self.__proxyServerController: ProxyServerController = ProxyServerController(
+            self.__proxyServerConfigurator
         )
         self.__adbManager = adbutils.AdbClient(
             host=settings.adbSettings.ip, port=settings.adbSettings.port
@@ -77,5 +83,33 @@ class Manager(Generic[T]):
                 yield serial, device
 
 
-    def startProxyServer(self):
-        pass
+    def init(self) -> bool:
+        """
+            Init has few important pasts:
+            1) getting devices and wrappers for them (proxyInterfaces)
+            2) activate proxy interfaces, catching physic interfaces
+            3) configure proxy server by gotten proxy interfaces
+            4) configure the inner interfaces, bridge
+
+            And then system will be ready to start
+        """
+
+        interfaces = self.__networkManager.getAllInterfaces()
+
+        # getting devices and wrappers for them (proxyInterfaces)
+        proxyInterfaces = [ProxyInterface(dev) for serial, dev in self.__connected.items() ]
+
+        # activate proxy interfaces, catching physic interfaces
+        for piface in proxyInterfaces: piface.activate()
+
+        # configure proxy server by gotten proxy interfaces
+        self.__proxyServerConfigurator.config( [piface.networkData for piface in proxyInterfaces] )
+
+        # configure the inner interfaces, bridge
+        bridgeData: BridgeInterface = self.__networkManager.createBridge(
+            list( filter( lambda x: x.name in self.__settings.inner_interfaces, interfaces ) ),
+            name=self.__settings.bridge_name
+        )
+
+        self.__LOADED = True
+        return True

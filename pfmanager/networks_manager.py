@@ -13,7 +13,6 @@ class NetworkInterface:
 @dataclass
 class BridgeInterface:
     name: str
-    configs: ipaddress.IPv4Interface
     ifacesNames: field(default_factory=list)
 
 
@@ -21,7 +20,6 @@ class BridgeInterface:
 class NetworksManager:
     """
         API to the Linux networks manager.
-
         Singleton for only 1 connection in one period of time.
     """
 
@@ -76,10 +74,7 @@ class NetworksManager:
         return interfaces
 
 
-    def createBridge(
-            self, bridgeIface: ipaddress.IPv4Interface,
-            childrenIfaces: list[NetworkInterface],
-            name="proxy-inner") -> BridgeInterface:
+    def createBridge(self, childrenIfaces: list[NetworkInterface], name="proxy-inner") -> BridgeInterface:
         """
             Create and start a bridge to connect all inner physic interfaces to the logic one.
             Takes all children interfaces from the childrenIfaces, configs for the network from .
@@ -110,8 +105,7 @@ class NetworksManager:
 
 
         return BridgeInterface(
-            name=name, configs=bridgeIface,
-            ifacesNames=[chName for chName in childrenIfaces]
+            name=name, ifacesNames=[chName for chName in childrenIfaces]
         )
 
 
