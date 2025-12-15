@@ -8,13 +8,11 @@ class ProxySettings:
         Settings for proxy server (squid).
     """
     ip: str = '127.0.0.1'
-    port: int = 3331
-    remote: bool = False
+    start_port: int = 3331
     max_devices: int = 0 # 0 - unlimited
-    deny: bool = True # block other connections
     nameservers: list[str] = field(default_factory=lambda: ['1.1.1.1', '8.8.8.8'])
-    path_to_squid: str = "/etc/squid/squid.conf",
-    service_name = "squid.service"
+    path_to_configs: str = "",
+    service_name = ""
 
 
 @dataclass

@@ -81,10 +81,10 @@ class Manager(Generic[T], ILoadable):
 
     @property
     def iterDevices(self) -> Iterator[tuple[str, T]]:
-        """
+        """jcd4@1!7_12
             Creating list of all devices using IDevice class,
             which you put in template variable. By default - Device class.
-            :return Devices, one by one (generator), created by template class
+            :return: Devices, one by one (generator), created by template class
         """
 
         for dev in self.__adbManager.device_list():
