@@ -1,6 +1,8 @@
-from typing import TypeVar, Iterator, Generic
+from functools import wraps
+from typing import TypeVar, Iterator, Generic, Callable
 import adbutils
 import os
+from abc import ABC, abstractmethod
 
 from . import IDevice, settings
 from .device import Device
@@ -18,13 +20,32 @@ def checkForRootPermissions():
     return os.geteuid() == 0
 
 
-class Manager(Generic[T]):
+class ILoadable(ABC):
+    @property
+    @abstractmethod
+    def loaded(self) -> bool: ...
+
+def after_load(function: Callable) -> Callable:
+    """
+        Checker for loaded
+    """
+
+    @wraps(function)
+    def wrapper(self: ILoadable, *args, **kwargs):
+        if not self.loaded: raise Exception('Cannot do an action before loading!')
+        return function(self, *args, **kwargs)
+
+    return wrapper
+
+
+
+class Manager(Generic[T], ILoadable):
     """
         Main controller for all devices.
         Template - realization of IDevice, by default - Device.
     """
 
-    def __init__(self, template:type[T]=Device, settings: ManagerSettings=ManagerSettings) -> None:
+    def __init__(self, settings: ManagerSettings=ManagerSettings, template:type[T]=Device) -> None:
         self.__template: type[T] = template
         self.__settings: ManagerSettings = settings
 
@@ -49,6 +70,8 @@ class Manager(Generic[T]):
             serial: device for serial, device in self.iterConnectedDevices
         }
 
+    @property
+    def loaded(self) -> bool: return self.__LOADED
 
     @property
     def processedDevices(self) -> dict[str, T]:
@@ -113,3 +136,13 @@ class Manager(Generic[T]):
 
         self.__LOADED = True
         return True
+
+
+    @after_load
+    def startProxyServer(self):
+        self.__proxyServerController.start()
+
+    @after_load
+    def stopProxyServer(self):
+        self.__proxyServerController.stop()
+
