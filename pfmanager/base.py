@@ -113,6 +113,7 @@ class Manager(Generic[T], ILoadable):
             2) activate proxy interfaces, catching physic interfaces
             3) configure proxy server by gotten proxy interfaces
             4) configure the inner interfaces, bridge
+            5) create (or update) 3proxy systemd unit
 
             And then system will be ready to start
         """
@@ -133,6 +134,10 @@ class Manager(Generic[T], ILoadable):
             list( filter( lambda x: x.name in self.__settings.inner_interfaces, interfaces ) ),
             name=self.__settings.bridge_name
         )
+
+        # creating systemd unit
+        self.__proxyServerConfigurator.createUnit()
+        self.__proxyServerController.reload()
 
         self.__LOADED = True
         return True

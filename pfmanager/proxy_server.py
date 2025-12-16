@@ -10,9 +10,10 @@ from typing import Any
 import dbus
 import shutil
 
+from . import settings
 from .networks_manager import NetworkInterface
 from .settings import ProxySettings
-
+from .configs.unit_creator import PROXY_UNIT
 
 
 class ProxyServerConfigurator:
@@ -22,20 +23,27 @@ class ProxyServerConfigurator:
 
     def __init__(self, settings: ProxySettings):
         self.__settings = settings
-        self.__pathToConfigs: str = settings.path_to_squid
+        self.__pathToConfigs: str = settings.path_to_configs
         self.__pathToBackup: str = self.__pathToConfigs + ".back"
-        self.__serviceName = settings.service_name
 
     @property
-    def service_name(self): return self.__serviceName
+    def service_name(self): return self.__settings.service_name
 
 
     def backup(self) -> None:
         if os.path.exists(self.__pathToConfigs):
             shutil.copyfile(self.__pathToConfigs, self.__pathToBackup)
 
+
     def restore(self) -> None:
         shutil.copyfile(self.__pathToBackup, self.__pathToConfigs)
+
+
+    def createUnit(self, defaultPath: str="/usr/lib/systemd/system/") -> None:
+        unitData: str = PROXY_UNIT(self.__settings.path_to_file, self.__pathToConfigs)
+
+        with open(os.path.join(defaultPath, self.__settings.service_name), "w") as f:
+            f.write(unitData)
 
 
     def config(self, interfaces: list[NetworkInterface]) -> dict[str, NetworkInterface]:
@@ -67,6 +75,8 @@ class ProxyServerConfigurator:
         return result
 
 
+
+
 class ProxyServerController:
     def __init__(self, configurator: ProxyServerConfigurator):
         self.__configurator = configurator
@@ -80,10 +90,14 @@ class ProxyServerController:
         self.__systemdManager = dbus.Interface(self.__systemd1, 'org.freedesktop.systemd1.Manager')
 
 
-    def start(self) -> bool:
+    def start(self):
         self.__systemdManager.StartUnit(self.__configurator.service_name, "replace")
         return True
 
-    def stop(self) -> bool:
+    def stop(self):
         self.__systemdManager.StopUnit(self.__configurator.service_name, "replace")
         return True
+
+    def reload(self):
+        """ Reload unit files in daemon-mode """
+        self.__systemdManager.Reload()
